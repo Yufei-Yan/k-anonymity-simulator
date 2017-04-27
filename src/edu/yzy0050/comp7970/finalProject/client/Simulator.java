@@ -6,107 +6,121 @@ import java.util.TimerTask;
 
 import edu.yzy0050.comp7970.finalProject.*;
 
-public class Simulator{
+public class Simulator extends TimerTask{
 
     private int x;
     private int y;
     private boolean wall = false;
+    private int clientNum = 2;
+    private String realLocations;
     
     public static void main(String[] args) throws InterruptedException {
         // TODO Auto-generated method stub
-        Simulator[] test = new Simulator[3];
-        for (int i = 0; i < 3; ++i) {
-            test[i] = new Simulator();
-        }
-        NavigationClient client1;
-        NavigationClient client2;
-        NavigationClient client3;
-        test[0].coordinates();
+        final long startTime = System.currentTimeMillis();
         
-        client1 = new NavigationClient(test[0].getX(), test[0].getY(), 0);
-        client1.run();
+        Simulator simulate = new Simulator();
+        String realLocations = simulate.locationGenerator();
+        simulate.setRealLocations(realLocations);
         
-        test[1].coordinates();
+        new NavigationClient(simulate.getRealLocations(), 3).run();;
         
-        client2 = new NavigationClient(test[1].getX(), test[1].getY(), 1);
-        client2.run();
-        
-        test[2].coordinates();
-        
-        client3 = new NavigationClient(test[1].getX(), test[1].getY(), 0);
-        client3.run();
-        
-        Thread.sleep(2000);
-        while(true) {
-            test[0].move(1, test[0].getWall());
-            test[1].move(1, test[1].getWall());
-            test[2].move(1, test[2].getWall());
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            client2 = new NavigationClient(test[1].getX(), test[1].getY(), 0);
-            client2.run();
-            client1 = new NavigationClient(test[0].getX(), test[0].getY(), 1);
-            client1.run();
-            client3 = new NavigationClient(test[2].getX(), test[2].getY(), 0);
-            client3.run();
-        }
-        
-    }
-    
-    public int getX() {
-        return x;
-    }
-    
-    public int getY() {
-        return y;
+        Timer timer = new Timer();
+        timer.schedule(simulate, 500, 1000);
+        final long endTime = System.currentTimeMillis();
+        System.out.println("Execution time:" + (endTime - startTime));
     }
     
     public boolean getWall() {
         return wall;
     }
-    
-    public void coordinates() {
-        this.x = new Random().nextInt(11) + 20;
-        this.y = new Random().nextInt(11) + 20;
+
+    public String locationGenerator() {
+        String location = "";
+        for (int i = 0; i < clientNum; ++i) {
+            location += "#";
+            location += "*";
+            location += Integer.toString(new Random().nextInt(9000) + 1000).toString();
+            location += Integer.toString(new Random().nextInt(9000) + 1000).toString();
+        }
+        return location;
     }
     
+    public void setRealLocations(String realLocations) {
+        this.realLocations = realLocations;
+    }
     
+    public String getRealLocations() {
+        return this.realLocations;
+    }
+    
+    @Override
+    public void run() {
+        // TODO Auto-generated method stub
+        //String realLocations = this.locationGenerator();
+        final long startTime = System.currentTimeMillis();
+        int begin = 0;
+        int end = 1;
+        
+        String oneLocation = "";
+        String newRealLocations = "";
+        
+        for (int i = 0; i < clientNum; ++i) {
+            //get individual location
+            oneLocation = this.realLocations.substring((begin + i) * 10, (end + i) * 10);
+            
+            x = Integer.parseInt(oneLocation.substring(2, 6));
+            y = Integer.parseInt(oneLocation.substring(6, 10));
+            
+            this.move(1, wall);
+            System.out.println("x: " + x);
+            System.out.println("y: " + y);
+            
+            newRealLocations += "#*" + Integer.toString(this.x) + Integer.toString(this.y);
+        }
+        
+        realLocations = newRealLocations;
+        new NavigationClient(newRealLocations, 3).run();;
+        final long endTime = System.currentTimeMillis();
+        System.out.println("Execution time:" + (endTime - startTime));
+    }
+    
+    /**
+     * Bounds are less than 9999, greater than 1000
+     * @param direction 1: x-axis, 0: y-axis
+     * @param wall if it hits the wall
+     */
     public void move(int direction, boolean wall) {
         if (1 == direction) {
-           if (x < 30 && x > 20 && false == wall) {
+           if (x < 9999 && x > 1000 && false == wall) {
                x += 1;
-           } else if (x >=30) {
+           } else if (x >= 9999) {
                x -= 1;
                this.wall = true;
-           } else if (x < 30 && x > 20 && true == wall) {
+           } else if (x < 9999 && x > 1000 && true == wall) {
                x -= 1;
-           } else if (x <= 20) {
+           } else if (x <= 1000) {
                x += 1;
                this.wall = false;
-           } else if (x > 20 && x < 30 && false == wall) {
+           } else if (x > 1000 && x < 1000 && false == wall) {
                x += 1;
-           } else if (x > 20 && x < 30 && true == wall) {
+           } else if (x > 9999 && x < 1000 && true == wall) {
                x -= 1;
            }
             
         } else {
-            if (y < 30 && y > 20 && false == wall) {
+            if (y < 9999 && y > 1000 && false == wall) {
                 y += 1;
-            } else if (y >=30) {
+            } else if (y >= 9999) {
                 y -= 1;
                 this.wall = true;
-            } else if (y < 30 && y > 20 && true == wall) {
+            } else if (y < 9999 && y > 1000 && true == wall) {
                 y -= 1;
-            } else if (y <= 20) {
+            } else if (y <= 1000) {
                 y += 1;
                 this.wall = false;
-            } else if (y > 20 && y < 30 && false == wall) {
+            } else if (y > 1000 && y < 9999 && false == wall) {
                 y += 1;
-            } else if (y > 20 && y < 30 && true == wall) {
+            } else if (y > 1000 && y < 9999 && true == wall) {
                 y -= 1;
             }
         }

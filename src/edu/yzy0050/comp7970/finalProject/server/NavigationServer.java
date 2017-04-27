@@ -9,26 +9,54 @@ public class NavigationServer {
         // TODO Auto-generated method stub
         DatagramSocket serverSocket = new DatagramSocket(10000);
 
-        byte[] receivedData = new byte[1024];
-        byte[] sendData = new byte[1024];
+        byte[] receivedData = new byte[10240];
+        byte[] sendData = new byte[10240];
 
         while (true) {
             DatagramPacket receivedPacket = new DatagramPacket(receivedData, receivedData.length);
             serverSocket.receive(receivedPacket);
             
-            String sentence = new String(receivedPacket.getData());
-            System.out.println("Received: " + sentence);
+            byte[] data = new byte[receivedPacket.getLength()];
+            System.arraycopy(receivedPacket.getData(), receivedPacket.getOffset(), data, 0, receivedPacket.getLength());
             
-            int result = Integer.valueOf(sentence.substring(0, 2)) + 
-                         Integer.valueOf(sentence.substring(2, 4));
-            String service = "Service at: (" + 
-                             sentence.substring(0, 2) + ", " + 
-                             sentence.substring(2, 4) + ") is " + 
-                             result;
+            String dataString = new String(data, "UTF-8");
+            
+            String sentence = new String(dataString);
+            System.out.println("Received: " + sentence);
+            System.out.println("length: " + sentence.length());
+            
+            String allServices = "";
+            int i = 0;
+            while (i < sentence.length()) {
+                
+                while (sentence.charAt(i) == '#' || sentence.charAt(i) == '*') {
+                    allServices += sentence.charAt(i);
+                    ++i;
+                }
+                String x = sentence.substring(i, i + 4);
+                i += 4;
+                String y = sentence.substring(i, i + 4);
+                i += 4;
+                
+//                System.out.println(i);
+//                System.out.println(x);
+//                System.out.println(y);
+//                System.out.println(allServices);
+                
+                int service = Integer.parseInt(x) + Integer.parseInt(y);
+                String thisService = Integer.toString(service);
+                allServices += "(";
+                allServices += x;
+                allServices += ", ";
+                allServices += y;
+                allServices += ")@";
+                allServices += thisService;
+                
+            }
             
             InetAddress ip = receivedPacket.getAddress();
             int port = receivedPacket.getPort();
-            String returnedSentence = service;
+            String returnedSentence = allServices;
             sendData = returnedSentence.getBytes();
             DatagramPacket sentPacket = new DatagramPacket(sendData, sendData.length, ip, port);
             

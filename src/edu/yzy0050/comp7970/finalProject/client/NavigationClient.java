@@ -11,19 +11,14 @@ import edu.yzy0050.comp7970.finalProject.middleware.*;
 public class NavigationClient extends TimerTask{
 
     private int port = 10000;
-    private int clientNum = 3;
-    private int x;
-    private int y;
+    //private int clientNum = 2;
+    private int locationNum = 3;
+    private String realLocation;
     
-    public NavigationClient() {
-        x = 20;
-        y = 20;
-    }
-    
-    public NavigationClient(int x, int y, int clients) {
-        this.x = x;
-        this.y = y;
-        this.clientNum = clients;
+    public NavigationClient(String realLocation, int locationNum) {
+        //this.clientNum = clientNum;
+        this.locationNum = locationNum;
+        this.realLocation = realLocation;
     }
     
     private void clientSender(DatagramSocket socket, String location) throws IOException {
@@ -39,42 +34,58 @@ public class NavigationClient extends TimerTask{
         //socket.close();
     }
     
-    private void clientReceiver(DatagramSocket socket) throws IOException {
+    private String clientReceiver(DatagramSocket socket) throws IOException {
         //DatagramSocket socket = new DatagramSocket();
         //InetAddress ip = InetAddress.getByName("localhost");
         
-        byte[] serviceRaw = new byte[100];
+        byte[] serviceRaw = new byte[10240];
         
         DatagramPacket packet = new DatagramPacket(serviceRaw, serviceRaw.length);
         socket.receive(packet);
         String serviceInfo = new String(packet.getData());
-        System.out.println(serviceInfo);
+        System.out.println("service info: " + serviceInfo);
         
         //socket.close();
+        
+        return serviceInfo;
     }
     
-    public String getLocation() {
-        //System.out.println(x);
-        //System.out.println(y);
-        return Integer.toString(x) + Integer.toString(y);
+    /**
+     * 
+     * @return a randomly generated real location 
+     */
+    private String locationGenerator() {
+        return Integer.toString(new Random().nextInt(9000) + 1000) + 
+               Integer.toString(new Random().nextInt(9000) + 1000);
     }
     
 
     @Override
     public void run() {
         // TODO Auto-generated method stub
+        System.out.println("Client running");
+        DatagramSocket socket;
         try {
-            System.out.println("Client running...");
-            DatagramSocket socket = new DatagramSocket();
+            socket = new DatagramSocket();
+            //String realLocation = this.locationGenerator();
+            //String realLocation = "#*10001000#*20002000";
+            Middleware dummy = new Middleware(realLocation, locationNum);
             
-            this.clientSender(socket, this.getLocation());
-            this.clientReceiver(socket);
+            String fakeLocations = dummy.locationGenerator();
+            this.clientSender(socket, fakeLocations);
+            String allService = this.clientReceiver(socket);
+            
+            String realService = dummy.getRealService(allService);
+            
+            System.out.println("Services are: \n" + realService);
             
             socket.close();
+        
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        
         
     }
     
